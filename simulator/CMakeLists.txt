@@ -1,0 +1,6 @@
+add_executable(pulse_client src/client.cpp)
+target_link_libraries(pulse_client PRIVATE pulse_protocol Threads::Threads)
+if(CMAKE_SYSTEM_NAME STREQUAL "Linux")
+  add_executable(pulse_simulator src/simulator.cpp)
+  target_link_libraries(pulse_simulator PRIVATE pulse_protocol Threads::Threads)
+endif()

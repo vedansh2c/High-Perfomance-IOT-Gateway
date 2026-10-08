@@ -1,0 +1,8 @@
+FROM python:3.12-slim-bookworm
+RUN apt-get update && apt-get install -y --no-install-recommends g++ cmake make libgtest-dev curl && rm -rf /var/lib/apt/lists/*
+WORKDIR /src
+COPY backend/requirements.txt /tmp/requirements.txt
+RUN python3 -m venv /opt/venv && /opt/venv/bin/pip install --no-cache-dir -r /tmp/requirements.txt
+ENV PATH="/opt/venv/bin:$PATH" PYTHONPATH=/src/backend GATEWAY_IPC=/tmp/pulse-test.sock GATEWAY_HOST=127.0.0.1 SIMULATOR_BIN=/src/build/simulator/pulse_simulator
+COPY . .
+RUN cmake -S . -B build -DCMAKE_BUILD_TYPE=Debug && cmake --build build -j4 && ctest --test-dir build --output-on-failure

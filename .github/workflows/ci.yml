@@ -1,0 +1,30 @@
+name: Test IoT Gateway
+on: [push, pull_request]
+jobs:
+  linux:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Build and test Linux C++ and control API
+        run: |
+          docker build -f Dockerfile.test -t iot-gateway-test .
+          docker run --rm iot-gateway-test python3 scripts/integration.py
+          docker run --rm iot-gateway-test python3 scripts/test_backend.py
+      - name: Sanitizers
+        run: docker run --rm iot-gateway-test sh -c 'cmake -S . -B build-asan -DENABLE_SANITIZERS=ON -DCMAKE_BUILD_TYPE=Debug && cmake --build build-asan -j4 && ctest --test-dir build-asan --output-on-failure && GATEWAY_BIN=/src/build-asan/gateway/pulse_gateway SIMULATOR_BIN=/src/build-asan/simulator/pulse_simulator python3 scripts/integration.py'
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: frontend/package-lock.json
+      - run: npm ci && npm run build
+        working-directory: frontend
+      - name: Compose end to end
+        run: |
+          docker compose up --build -d --wait
+          python3 scripts/smoke.py
+          cd frontend
+          npx playwright install --with-deps chromium
+          npx playwright test
+          cd ..
+          docker compose down

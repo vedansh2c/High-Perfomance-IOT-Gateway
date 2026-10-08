@@ -1,0 +1,12 @@
+build/
+node_modules/
+dist/
+__pycache__/
+.pytest_cache/
+.venv/
+*.pyc
+benchmarks/results/*.json
+benchmarks/results/*.csv
+frontend/test-results/
+frontend/playwright-report/
+*.tsbuildinfo
